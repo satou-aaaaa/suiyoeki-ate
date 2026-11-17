@@ -24,6 +24,8 @@ const PINQ = "実験ノートより。つんとしたにおいがして、赤色
 // 出典：岡山県の学習指導案（リトマス紙の表）・仙台市立作並小学校の学習指導案（2026-11-17 に読んだ）
 // 答え → [何性（sansei・chusei・arukari）, とけているもの, 決め手に必ずある言葉]
 const CL = { "塩酸": ["sansei", "kitai", "塩化水素"], "炭酸水": ["sansei", "kitai", "二酸化炭素"], "食塩水": ["chusei", "kotai", "食塩がとけた"], "石灰水": ["arukari", "kotai", "白い物"], "アンモニア水": ["arukari", "kitai", "つんとした"] };
+// 問いに出してはいけない答えの名前（下の検査で、答えの5つが全部ここに入っているかも見る）
+const NAME_RE = /塩酸|炭酸水|食塩水|石灰水|アンモニア水/;
 // 種類 → [答え, 問いに必ずある言葉（手がかりが入れかわっていない印）]
 const TB = {
   e_nioi: ["塩酸", "においがあり"], t_awa: ["炭酸水", "あわが出ている"], s_chusei: ["食塩水", "色を変えない"], k_nigoru: ["石灰水", "白くにごる"], a_tsun: ["アンモニア水", "つんとした"],
@@ -48,7 +50,7 @@ const TB = {
         if (typeof P.key !== "string" || !P.key.includes(t[0]) || !P.key.includes(CL[t[0]][2])) why.push("決め手が水溶液の表とちがう"); // CodeRabbit 2026-11-17
         if (!P.src.some((x) => /1_6_4_2[56]|file\/2235|610419|h25_6nen|330543/.test(x[1]))) why.push("出典が表に無い");
         if (!/どの水溶液？$/.test(P.q) || P.rev) why.push("問いの言い方がちがう");
-        if (/塩酸|炭酸水|食塩水|石灰水|アンモニア水/.test(P.q)) why.push("問いに答えの名前が出ている");
+        if (NAME_RE.test(P.q)) why.push("問いに答えの名前が出ている");
       }
       if (!P.src.length || P.src.some((x) => !Array.isArray(x) || !/^https:\/\//.test(x[1]))) why.push("出典が無い");
       if (JSON.stringify(G.make(`${k.id}|qa${s}`)) !== JSON.stringify(P)) why.push("同じ種で同じ問題にならない");
@@ -87,6 +89,7 @@ const TB = {
   // 過去の日の問題が変わらない（data.js を直したときの見張り。値は 2026-11-17 に作ったもの）
   const P0 = G.make(G.dailyTags("2026-11-17")[0]);
   check("知らない種類・継承したプロパティ名（constructor・__proto__・toString）の tag は null（CodeRabbit 2026-11-17）", ["constructor|1", "__proto__|1", "toString|1", "nai|1"].every((t) => G.make(t) === null));
+  check("答えの名前の検査（NAME_RE）が答えの5つを全部見ている（写し元の言葉を外すとき、ここから消してしまわないように）", G.CLASSES.every((c) => NAME_RE.test(c)));
   check("第1回（2026-11-17）の1問目が作ったときのまま（並べ替え・削除で過去の日の問題を変えない）", `${P0.kind}:${P0.v}` === PIN && `${P0.q}|${P0.opts.join("/")}` === PINQ, `${P0.kind}:${P0.v} ${P0.q}`);
 }
 
