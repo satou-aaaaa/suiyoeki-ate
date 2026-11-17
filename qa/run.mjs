@@ -48,7 +48,7 @@ const TB = {
         if (typeof P.key !== "string" || !P.key.includes(t[0]) || !P.key.includes(CL[t[0]][2])) why.push("決め手が水溶液の表とちがう"); // CodeRabbit 2026-11-17
         if (!P.src.some((x) => /1_6_4_2[56]|file\/2235|610419|h25_6nen|330543/.test(x[1]))) why.push("出典が表に無い");
         if (!/どの水溶液？$/.test(P.q) || P.rev) why.push("問いの言い方がちがう");
-        if (/塩酸|炭酸水|食塩水|アンモニア水/.test(P.q)) why.push("問いに答えの名前が出ている");
+        if (/塩酸|炭酸水|食塩水|石灰水|アンモニア水/.test(P.q)) why.push("問いに答えの名前が出ている");
       }
       if (!P.src.length || P.src.some((x) => !Array.isArray(x) || !/^https:\/\//.test(x[1]))) why.push("出典が無い");
       if (JSON.stringify(G.make(`${k.id}|qa${s}`)) !== JSON.stringify(P)) why.push("同じ種で同じ問題にならない");
