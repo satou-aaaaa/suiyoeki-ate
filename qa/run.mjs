@@ -48,7 +48,7 @@ const TB = {
         if (P.grp !== CL[t[0]][0]) why.push("何性かが水溶液の表とちがう");
         if (P.cat !== CL[t[0]][1]) why.push("とけているものが水溶液の表とちがう");
         if (typeof P.key !== "string" || !P.key.includes(t[0]) || !P.key.includes(CL[t[0]][2])) why.push("決め手が水溶液の表とちがう"); // CodeRabbit 2026-11-17
-        if (!P.src.some((x) => /1_6_4_2[56]|file\/2235|610419|h25_6nen|330543/.test(x[1]))) why.push("出典が表に無い");
+        if (!P.src.some((x) => /1_6_4_2[56]|file\/2235|h25_6nen|330543/.test(x[1]))) why.push("出典が表に無い");
         if (!/どの水溶液？$/.test(P.q) || P.rev) why.push("問いの言い方がちがう");
         if (NAME_RE.test(P.q)) why.push("問いに答えの名前が出ている");
       }
@@ -67,8 +67,8 @@ const TB = {
   const longWhy = [], longLook = [], longOpt = [];
   for (const k of G.KINDS) { if ([...k.why].length > 110) longWhy.push(k.id); if ([...k.look].length > 60 || [...k.key].length > 110) longLook.push(k.id); for (let s = 0; s < 200; s++) { const P = G.make(`${k.id}|len${s}`); for (const o of [...P.opts, P.q]) if ([...o].length > 70) longOpt.push(`${k.id}:${o}`); } }
   check("説明は110字以内・ヒントは60字以内（答えの決め手は110字）・問いは70字以内（やさしい日本語。一文を短く）", !longWhy.length && !longLook.length && !longOpt.length, longWhy.concat(longLook, longOpt.slice(0, 3)).join(","));
-  const okSrc = Object.values(G.SRC).every(([n, u]) => /^https:\/\/(www\.city\.sapporo\.jp\/kyoiku\/shido\/|center\.fcs\.ed\.jp\/|www\.pref\.hiroshima\.lg\.jp\/|www\.sendai-c\.ed\.jp\/|www\.pref\.okayama\.jp\/)/.test(u) && n);
-  check("出典は札幌市教育委員会、岡山県、広島県、仙台市、福島県教育センターだけ", okSrc);
+  const okSrc = Object.values(G.SRC).every(([n, u]) => /^https:\/\/(www\.city\.sapporo\.jp\/kyoiku\/shido\/|center\.fcs\.ed\.jp\/|www\.sendai-c\.ed\.jp\/|www\.pref\.okayama\.jp\/)/.test(u) && n);
+  check("出典は札幌市教育委員会、岡山県、仙台市、福島県教育センターだけ", okSrc);
   check("問い・説明で家での実験やまぜることをすすめない", !G.KINDS.some((k) => { for (let i = 0; i < 100; i++) { const P = G.make(`${k.id}|nz${i}`); if (/家で|まぜて|混ぜて|なめ|飲/.test(P.q + P.why)) return true; } return false; }));
 }
 {
@@ -105,6 +105,10 @@ check("乱数は sort の比較の中で引かない（ブラウザで引く回�
 check("言い方：「必ず」「絶対」と言い切らない", !/必ず|絶対/.test(html.replace(/\/\/[^\n]*/g, "") + gen.replace(/\/\/[^\n]*/g, "") + readme));
 { const howto = (html.match(/<dialog id="howto"[\s\S]*?<\/dialog>/) || [""])[0], ab = (html.match(/function about\(\)[\s\S]*?\n}/) || [""])[0], dis = (t) => /教科書/.test(t) && /代わりではありません|確かめて/.test(t);
   check("言い方：遊び方・「このゲームについて」・README のどれにも、教科書で確かめることがある", dis(howto) && dis(ab) && dis(readme), `遊び方 ${dis(howto)}・について ${dis(ab)}`); }
+// 「くわしく調べる所」の2つ目のリンク（CH）の持ち主の名前。CH を変えたら、ここにも足す（2026-11-17、写し元の「大阪府のホームページ」が別の県のリンクに残っていた）
+const CHNAME = { "www.pref.osaka.lg.jp": "大阪府", "www.osaka-c.ed.jp": "大阪府教育センター", "www.pref.chiba.lg.jp": "千葉県教育委員会", "www.edu-c.pref.miyagi.jp": "宮城県総合教育センター", "energy-kyoiku.meti.go.jp": "経済産業省", "www.gmnh.pref.gunma.jp": "群馬県立自然史博物館", "www.pref.okayama.jp": "岡山県" };
+{ const ch = (html.match(/\bCH = "(https:[^"]+)"/) || [])[1]; const lab = (html.match(/<a href="\$\{CH\}"[^>]*>([^<]+)<\/a>/) || [])[1]; const want = ch && CHNAME[new URL(ch).host];
+  check("「くわしく調べる所」の2つ目のリンクの名前が、リンク先の持ち主と合う（写し元の名前が残らない）", !!want && !!lab && lab.startsWith(want), `${ch} ${lab}`); }
 check("写し元（感覚器官あて・化石あて・消化酵素あて・エネルギーの種類あて・顕微鏡の部品あて・細胞のつくりあて・状態変化あて・光の進み方あて・無脊椎動物なかま分け・力の種類あて・季節の天気あて・気体あて・液性よみ・植物なかま分け・動物なかま分け・なに税？）の言葉が残っていない（game-dev.md A 手順5）", !/憲法|国会|内閣|裁判所|天皇|国事行為|しくみ帳|kenpo|kps|KPS|税|納め|財務省|e-Gov|zeikin|zni|ZNI|国税庁|哺乳|dnk|DNK|ズーネット|海遊館|胚珠|維管束|子葉|shokubutsu|snk|SNK|液性|洗剤|eky|EKY|ekisei|消費者庁|kta|KTA|天気|季節|気団|kst|KST|kisetsu|磁力|cks|CKS|chikara|甲殻|クモ|多足|軟体|無脊椎|msk|MSK|musekitsui|屈折|直進|hks|HKS|融解|凝固|凝縮|昇華|jth|JTH|jotai|状態変化|葉緑体|液胞|sbt|SBT|saibo|顕微鏡|knb|KNB|kenbikyo|エネルギー|ens-|ENS|energy|消化|酵素|胆汁|skk|SKK|shoka-koso|化石|三葉虫|アンモナイト|ksa|KSA|kaseki|感覚器官|網膜|kka|KKA|kankaku/.test(html + gen + readme));
 { const a11 = JSON.parse(readFileSync(path.join(root, "qa/a11y.json"), "utf8"));
   check("見やすさの検査の画面の名前（qa/a11y.json）が、このゲームの画面にある名前（写し元の名前が残らない。CodeRabbit ekisei-yomi#1 の「雲帳」）", (a11.screens || []).every((x) => html.includes(x.name)), (a11.screens || []).map((x) => x.name).join(",")); }
